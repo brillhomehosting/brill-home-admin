@@ -1,12 +1,12 @@
 import FuseScrollbars from '@fuse/core/FuseScrollbars';
+import { Divider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import clsx from 'clsx';
 import { memo } from 'react';
-import { Divider } from '@mui/material';
 import UserMenu from 'src/components/theme-layouts/components/UserMenu';
+import GoToDocBox from '../../components/GoToDocBox';
 import Logo from '../../components/Logo';
 import Navigation from '../../components/navigation/Navigation';
-import GoToDocBox from '../../components/GoToDocBox';
 
 const Root = styled('div')(({ theme }) => ({
 	backgroundColor: theme.vars.palette.background.default,
@@ -60,7 +60,7 @@ function NavbarMobileLayout2(props: NavbarMobileLayout2Props) {
 				<div className="flex shrink-0 items-center justify-center py-12 opacity-10">
 					<img
 						className="w-full max-w-16"
-						src="/assets/images/logo/logo.svg"
+						src="/assets/images/logo/logo.png"
 						alt="footer logo"
 					/>
 				</div>

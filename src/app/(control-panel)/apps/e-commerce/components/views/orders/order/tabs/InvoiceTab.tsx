@@ -1,6 +1,6 @@
 import Card from '@mui/material/Card';
-import { styled } from '@mui/material/styles';
 import CardContent from '@mui/material/CardContent';
+import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -115,7 +115,7 @@ function InvoiceTab(props: InvoiceTabProps) {
 							<div className="seller flex items-center p-4">
 								<img
 									className="w-20"
-									src="/assets/images/logo/logo.svg"
+									src="/assets/images/logo/logo.png"
 									alt="logo"
 								/>
 
@@ -260,7 +260,7 @@ function InvoiceTab(props: InvoiceTabProps) {
 								<div className="shrink-0">
 									<img
 										className="w-8"
-										src="/assets/images/logo/logo.svg"
+										src="/assets/images/logo/logo.png"
 										alt="logo"
 									/>
 								</div>

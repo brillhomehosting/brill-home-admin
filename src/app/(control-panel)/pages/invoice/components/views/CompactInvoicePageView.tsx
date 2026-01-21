@@ -1,10 +1,10 @@
 'use client';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { motion } from 'motion/react';
-import Box from '@mui/material/Box';
-import { alpha } from '@mui/material/styles';
 
 /**
  * The compact invoice page.
@@ -61,7 +61,7 @@ function CompactInvoicePageView() {
 								<div className="w-24 place-self-center">
 									<img
 										className="w-24"
-										src="/assets/images/logo/logo.svg"
+										src="/assets/images/logo/logo.png"
 										alt="logo"
 									/>
 								</div>
@@ -216,7 +216,7 @@ function CompactInvoicePageView() {
 							<div className="mt-4 flex items-start">
 								<img
 									className="mt-2 w-9 shrink-0"
-									src="/assets/images/logo/logo.svg"
+									src="/assets/images/logo/logo.png"
 									alt="logo"
 								/>
 								<Typography

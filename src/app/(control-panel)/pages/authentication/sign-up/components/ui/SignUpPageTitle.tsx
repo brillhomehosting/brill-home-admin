@@ -1,12 +1,12 @@
-import Typography from '@mui/material/Typography';
 import Link from '@fuse/core/Link';
+import Typography from '@mui/material/Typography';
 
 function SignUpPageTitle() {
 	return (
 		<div className="w-full">
 			<img
 				className="w-12"
-				src="/assets/images/logo/logo.svg"
+				src="/assets/images/logo/logo.png"
 				alt="logo"
 			/>
 
