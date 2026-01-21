@@ -5,7 +5,7 @@ function ComingSoonPageTitle() {
 		<div className="w-full">
 			<img
 				className="w-12"
-				src="/assets/images/logo/logo.svg"
+				src="/assets/images/logo/logo.png"
 				alt="logo"
 			/>
 			<Typography className="mt-8 text-4xl leading-[1.25] font-extrabold tracking-tight">

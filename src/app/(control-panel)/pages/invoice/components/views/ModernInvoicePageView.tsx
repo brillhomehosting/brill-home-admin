@@ -1,8 +1,8 @@
 'use client';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { motion } from 'motion/react';
 import Typography from '@mui/material/Typography';
+import { motion } from 'motion/react';
 
 /**
  * The modern invoice page.
@@ -23,7 +23,7 @@ function ModernInvoicePageView() {
 									<div className="w-24 place-self-center">
 										<img
 											className="w-24"
-											src="/assets/images/logo/logo.svg"
+											src="/assets/images/logo/logo.png"
 											alt="lozgo"
 										/>
 									</div>
@@ -222,7 +222,7 @@ function ModernInvoicePageView() {
 							<div className="mt-4 flex items-start">
 								<img
 									className="mt-2 w-9 shrink-0"
-									src="/assets/images/logo/logo.svg"
+									src="/assets/images/logo/logo.png"
 									alt="logo"
 								/>
 								<Typography
