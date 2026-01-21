@@ -1,33 +1,22 @@
+# Brill Home Admin
 
-# Fuse React Versions
-## Available Versions
-- **Fuse React ViteJs** - Single Page Application (SPA)
-  - ViteJs offers a fast development experience with its instant server start and hot module replacement, making it ideal for SPAs where quick feedback and performance are crucial.
-- **Fuse React NextJs** - Server Side Rendering (SSR)
-  - NextJs excels in SSR by providing automatic static optimization and server-side rendering capabilities, which enhance SEO and initial load performance, making it perfect for dynamic web applications.
+Phiên bản quản trị cho dự án Brill Home Hosting.
 
-## GitHub Branches
+Mô tả
 
-| | **ViteJs** | **NextJs** |
-|---------|------|----------|
-| **Demo** | [`vitejs-demo`](https://github.com/withinpixels/fuse-react/tree/vitejs-demo) [🌐](https://fuse-react-vitejs-demo.fusetheme.com) | [`nextjs-demo`](https://github.com/withinpixels/fuse-react/tree/nextjs-demo) [🌐](https://fuse-react-nextjs-demo.fusetheme.com) |
-| **Skeleton** | [`vitejs-skeleton`](https://github.com/withinpixels/fuse-react/tree/vitejs-skeleton) [🌐](https://fuse-react-vitejs-skeleton.fusetheme.com) | [`nextjs-skeleton`](https://github.com/withinpixels/fuse-react/tree/nextjs-skeleton) [🌐](https://fuse-react-nextjs-skeleton.fusetheme.com) |
-| **Development Demo** | [`vitejs-demo-dev`](https://github.com/withinpixels/fuse-react/tree/vitejs-demo-dev) [🌐](https://fuse-react-vitejs-demo-dev.fusetheme.com) | [`nextjs-demo-dev`](https://github.com/withinpixels/fuse-react/tree/nextjs-demo-dev) [🌐](https://fuse-react-nextjs-demo-dev.fusetheme.com) |
-| **Development Skeleton** | [`vitejs-skeleton-dev`](https://github.com/withinpixels/fuse-react/tree/vitejs-skeleton-dev) [🌐](https://fuse-react-vitejs-skeleton-dev.fusetheme.com) | [`nextjs-skeleton-dev`](https://github.com/withinpixels/fuse-react/tree/nextjs-skeleton-dev) [🌐](https://fuse-react-nextjs-skeleton-dev.fusetheme.com) |
+Repository này chứa mã nguồn cho giao diện/quản trị của Brill Home Hosting.
 
+Bắt đầu
 
-## CLI Reference Links
+1. Kiểm tra code:
+   - git clone https://github.com/brillhomehosting/brill-home-admin.git
+   - cd brill-home-admin
+2. Làm theo hướng dẫn trong các file cấu hình hoặc tài liệu riêng (nếu có).
 
-- [ViteJs CLI Documentation](https://vitejs.dev/guide/cli.html)
- 
-- [NextJs CLI Documentation](https://nextjs.org/docs/api-reference/cli)
+Đóng góp
 
-## License
+Mọi góp ý và pull request đều hoan nghênh. Vui lòng tạo issue hoặc PR theo quy định của dự án.
 
-- [License Information](https://themeforest.net/licenses/terms/regular)
+License
 
-## More
-
-- [Fuse Theme Official Website](https://fusetheme.com/)
-
-
+Theo mặc định, chưa chỉ định license. Vui lòng bổ sung license nếu cần.
