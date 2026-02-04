@@ -183,19 +183,16 @@ export function useRoomImages(roomId: string) {
 				// Invalidate room query to refresh data
 				queryClient.invalidateQueries({ queryKey: roomKeys.detail(roomId) });
 
-				// Summary notification
-				const uploadedCount = result.uploaded.filter((r) => r.success).length;
-				const deletedCount = result.deleted.filter((r) => r.success).length;
+				// Summary notification - removed to allow caller to handle unified success message
+				// const uploadedCount = result.uploaded.filter((r) => r.success).length;
+				// const deletedCount = result.deleted.filter((r) => r.success).length;
 
-				if (uploadedCount > 0 || deletedCount > 0) {
-					const messages: string[] = [];
-
-					if (uploadedCount > 0) messages.push(`${uploadedCount} đã thêm`);
-
-					if (deletedCount > 0) messages.push(`${deletedCount} đã xóa`);
-
-					enqueueSnackbar(`Hình ảnh: ${messages.join(', ')}`, { variant: 'success' });
-				}
+				// if (uploadedCount > 0 || deletedCount > 0) {
+				// 	const messages: string[] = [];
+				// 	if (uploadedCount > 0) messages.push(`${uploadedCount} đã thêm`);
+				// 	if (deletedCount > 0) messages.push(`${deletedCount} đã xóa`);
+				// 	enqueueSnackbar(`Hình ảnh: ${messages.join(', ')}`, { variant: 'success' });
+				// }
 
 				setSyncStatus('');
 				return result;

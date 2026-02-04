@@ -6,6 +6,7 @@ import useParams from '@fuse/hooks/useParams';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import { motion } from 'motion/react';
+import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +15,7 @@ import { z } from 'zod';
 import { useRoom } from '../../api/hooks/useRoom';
 
 import FuseSvgIcon from '@fuse/core/FuseSvgIcon';
-import { Chip, Container, Divider, Paper } from '@mui/material';
+import { Backdrop, Chip, Container, Divider, Paper } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useNavigate } from 'react-router';
 import { useAmenities } from '../../api/hooks/useAmenities';
@@ -77,6 +78,7 @@ function RoomView(props: RoomViewProps) {
 	const routeParams = useParams();
 	const { roomId } = routeParams as { roomId: string };
 	const { data: room, isLoading, isError } = useRoom(roomId);
+	const { enqueueSnackbar } = useSnackbar();
 
 	const isCreateMode = mode === 'create' || !roomId || roomId === 'new' || roomId === 'add';
 	const [isEditMode, setIsEditMode] = useState(
@@ -135,6 +137,12 @@ function RoomView(props: RoomViewProps) {
 		control: controlTimeSlots,
 		name: 'timeslots'
 	});
+
+	useEffect(() => {
+		setIsEditMode(
+			mode === 'edit' || (mode !== 'view' && (isCreateMode || window.location.pathname.includes('/edit/')))
+		);
+	}, [window.location.pathname, mode, isCreateMode]);
 
 	useEffect(() => {
 		if (room) {
@@ -277,7 +285,7 @@ function RoomView(props: RoomViewProps) {
 
 				// First update the room basic info
 				updateRoom(
-					{ roomId, data: roomData },
+					{ roomId, data: roomData, showSuccessToast: false },
 					{
 						onSuccess: async () => {
 						// After room update success, sync image changes
@@ -292,7 +300,7 @@ function RoomView(props: RoomViewProps) {
 						const amenitiesChanged =
 							currentAmenityIds.length !== originalAmenityIds.length ||
 							currentAmenityIds.some((id: string) => !originalAmenityIds.includes(id)) ||
-							originalAmenityIds.some((id) => !currentAmenityIds.includes(id));
+							originalAmenityIds.some((id: string) => !currentAmenityIds.includes(id));
 
 						// If amenities changed, update them via API
 						if (amenitiesChanged) {
@@ -307,11 +315,13 @@ function RoomView(props: RoomViewProps) {
 								{ roomId, amenities: amenitiesPayload },
 								{
 									onSuccess: () => {
+										enqueueSnackbar('Cập nhật phòng thành công', { variant: 'success' });
 										setIsSaving(false);
 										setIsEditMode(false);
 										navigate(`/apps/rooms/${roomId}`);
 									},
 									onError: () => {
+										enqueueSnackbar('Cập nhật thông tin phòng thành công, nhưng cập nhật tiện nghi thất bại', { variant: 'warning' });
 										setIsSaving(false);
 										// Even if amenities update fails, still navigate away since room was updated
 										setIsEditMode(false);
@@ -321,6 +331,7 @@ function RoomView(props: RoomViewProps) {
 							);
 						} else {
 							// No amenity changes, just navigate
+							enqueueSnackbar('Cập nhật phòng thành công', { variant: 'success' });
 							setIsSaving(false);
 							setIsEditMode(false);
 							navigate(`/apps/rooms/${roomId}`);
@@ -407,206 +418,225 @@ function RoomView(props: RoomViewProps) {
 
 	return (
 		<FormProvider {...methods}>
-			<Container className="py-6">
-				{/* Header Actions */}
-				<div className="mb-6 flex items-center justify-between">
-					<Button
-						component={Link}
-						to="/apps/rooms"
-						startIcon={<FuseSvgIcon>lucide:arrow-left</FuseSvgIcon>}
-					>
-						Quay lại danh sách phòng
-					</Button>
-					<div className="flex gap-2">
-						{isEditMode ? (
-							<>
-								<Button
-									variant="outlined"
-									onClick={() => {
-										if (isCreateMode) {
-											navigate('/apps/rooms');
-										} else {
-											reset();
-											navigate(`/apps/rooms/${roomId}`);
-											setIsEditMode(false);
+			<div className="flex flex-auto flex-col relative min-h-full">
+				<Container className="py-6">
+					{/* Header Actions */}
+					<div className="mb-6 flex items-center justify-between">
+						<Button
+							component={Link}
+							to="/apps/rooms"
+							startIcon={<FuseSvgIcon>lucide:arrow-left</FuseSvgIcon>}
+						>
+							Quay lại danh sách phòng
+						</Button>
+						<div className="flex gap-2">
+							{isEditMode ? (
+								<>
+									<Button
+										variant="outlined"
+										onClick={() => {
+											if (isCreateMode) {
+												navigate('/apps/rooms');
+											} else {
+												reset();
+												navigate(`/apps/rooms/${roomId}`);
+												setIsEditMode(false);
+											}
+										}}
+									>
+										Hủy
+									</Button>
+									<Button
+										variant="contained"
+										color="primary"
+										onClick={methods.handleSubmit(handleSave)}
+										startIcon={
+											<FuseSvgIcon>
+												{isSaving || isSyncing ? 'lucide:loader-2' : 'lucide:save'}
+											</FuseSvgIcon>
 										}
-									}}
-								>
-									Hủy
-								</Button>
+										disabled={isSaving || isSyncing}
+									>
+										{isSyncing && syncStatus ? syncStatus : isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+									</Button>
+								</>
+							) : (
 								<Button
 									variant="contained"
-									color="primary"
-									onClick={methods.handleSubmit(handleSave)}
-									startIcon={
-										<FuseSvgIcon>
-											{isSaving || isSyncing ? 'lucide:loader-2' : 'lucide:save'}
-										</FuseSvgIcon>
-									}
-									disabled={isSaving || isSyncing}
+									color="secondary"
+									component={Link}
+									to={`/apps/rooms/edit/${roomId}`}
+									startIcon={<FuseSvgIcon>lucide:square-pen</FuseSvgIcon>}
 								>
-									{isSyncing && syncStatus ? syncStatus : isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+									Chỉnh sửa
 								</Button>
-							</>
-						) : (
-							<Button
-								variant="contained"
-								color="secondary"
-								onClick={() => {
-									navigate(`/apps/rooms/edit/${roomId}`);
-									setIsEditMode(true);
-								}}
-								startIcon={<FuseSvgIcon>lucide:edit</FuseSvgIcon>}
-							>
-								Chỉnh sửa
-							</Button>
-						)}
-					</div>
-				</div>
-
-				{!isEditMode ? (
-					<>
-						{/* VIEW MODE - 2 Column Layout */}
-						<Grid container spacing={4}>
-							{/* Left Column - Image Gallery */}
-							<Grid size={{ xs: 12, md: 6, lg: 5 }}>
-								<Paper
-									elevation={0}
-									className="sticky top-6 overflow-hidden rounded-2xl"
-								>
-									{/* Image Gallery */}
-									{room?.images && room.images.length > 0 && (
-										<RoomImageGallery
-											images={room.images}
-											roomName={room?.name || ''}
-											currentImageIndex={currentImageIndex}
-											onImageIndexChange={setCurrentImageIndex}
-										/>
-									)}
-								</Paper>
-							</Grid>
-
-							{/* Right Column - Room Information */}
-							<Grid size={{ xs: 12, md: 6, lg: 7 }}>
-								<div className="space-y-6">
-									{/* Title and Status */}
-									<Paper elevation={0} className="rounded-2xl p-6">
-										<div className="mb-4 flex items-start justify-between">
-											<div className="flex-1">
-												<Typography
-													variant="h3"
-													className="mb-2 font-bold"
-												>
-													{room?.name}
-												</Typography>
-											</div>
-										</div>
-										<Chip
-											label={room?.isActive ? 'HOẠT ĐỘNG' : 'NGỪNG HOẠT ĐỘNG'}
-											color={statusColor}
-											size="medium"
-										/>
-									</Paper>
-
-									{/* About This Room */}
-									<RoomInfo
-										name={room?.name}
-										description={room?.description}
-										capacity={room?.capacity}
-										bed={room?.bed}
-										area={room?.area}
-										hourlyRate={room?.hourlyRate}
-										overnightRate={room?.overnightRate}
-									/>
-
-									{/* Amenities */}
-									{room?.amenities && room.amenities.length > 0 && (
-										<RoomAmenities amenities={room.amenities} />
-									)}
-								</div>
-							</Grid>
-						</Grid>
-
-						{/* TimeSlots Section - Full Width */}
-						{timeSlots && timeSlots.length > 0 && (
-							<div className="mt-6">
-								<RoomTimeSlots timeSlots={timeSlots} roomId={roomId} />
-							</div>
-						)}
-					</>
-				) : (
-					/* EDIT MODE */
-					<Paper className="p-8">
-						<Typography
-							variant="h4"
-							className="mb-6 font-bold"
-						>
-							{isCreateMode ? 'Thêm phòng' : 'Chỉnh sửa phòng'}
-						</Typography>
-
-						<div className="space-y-6">
-							{/* Basic Information */}
-							<div>
-								<Typography
-									variant="h6"
-									className="mb-4 font-semibold"
-								>
-									Thông tin cơ bản
-								</Typography>
-								<RoomBasicInfoForm
-									control={control}
-									errors={errors}
-								/>
-							</div>
-
-							<Divider />
-
-							{/* Images */}
-							<div>
-								<Typography
-									variant="h6"
-									className="mb-4 font-semibold"
-								>
-									Hình ảnh
-								</Typography>
-								<RoomImagesForm control={control} />
-							</div>
-
-							<Divider />
-
-							{/* Amenities */}
-							<div>
-								<Typography
-									variant="h6"
-									className="mb-4 font-semibold"
-								>
-									Tiện nghi
-								</Typography>
-								<RoomAmenitiesForm
-									control={control}
-									amenities={amenities || []}
-								/>
-							</div>
-
-							<Divider />
-
-							{/* Time Slots */}
-							<RoomTimeSlotsForm
-								control={controlTimeSlots}
-								fields={timeSlotFields}
-								append={appendTimeSlot}
-								remove={removeTimeSlot}
-								getValues={getTimeSlotValues}
-								roomId={room?.id || roomId}
-								onSaveTimeSlot={handleSaveTimeSlot}
-								onDeleteTimeSlot={handleDeleteTimeSlot}
-								setValue={setTimeSlotValue}
-								isViewMode={false}
-							/>
+							)}
 						</div>
-					</Paper>
-				)}
-			</Container>
+					</div>
+
+					{!isEditMode ? (
+						<>
+							{/* VIEW MODE - 2 Column Layout */}
+							<Grid container spacing={4}>
+								{/* Left Column - Image Gallery */}
+								<Grid size={{ xs: 12, md: 6, lg: 5 }}>
+									<Paper
+										elevation={0}
+										className="sticky top-6 overflow-hidden rounded-2xl"
+									>
+										{/* Image Gallery */}
+										{room?.images && room.images.length > 0 && (
+											<RoomImageGallery
+												images={room.images}
+												roomName={room?.name || ''}
+												currentImageIndex={currentImageIndex}
+												onImageIndexChange={setCurrentImageIndex}
+											/>
+										)}
+									</Paper>
+								</Grid>
+
+								{/* Right Column - Room Information */}
+								<Grid size={{ xs: 12, md: 6, lg: 7 }}>
+									<div className="space-y-6">
+										{/* Title and Status */}
+										<Paper elevation={0} className="rounded-2xl p-6">
+											<div className="mb-4 flex items-start justify-between">
+												<div className="flex-1">
+													<Typography
+														variant="h3"
+														className="mb-2 font-bold"
+													>
+														{room?.name}
+													</Typography>
+												</div>
+											</div>
+											<Chip
+												label={room?.isActive ? 'HOẠT ĐỘNG' : 'NGỪNG HOẠT ĐỘNG'}
+												color={statusColor}
+												size="medium"
+											/>
+										</Paper>
+
+										{/* About This Room */}
+										<RoomInfo
+											name={room?.name}
+											description={room?.description}
+											capacity={room?.capacity}
+											bed={room?.bed}
+											area={room?.area}
+											hourlyRate={room?.hourlyRate}
+											overnightRate={room?.overnightRate}
+										/>
+
+										{/* Amenities */}
+										{room?.amenities && room.amenities.length > 0 && (
+											<RoomAmenities amenities={room.amenities} />
+										)}
+									</div>
+								</Grid>
+							</Grid>
+
+							{/* TimeSlots Section - Full Width */}
+							{timeSlots && timeSlots.length > 0 && (
+								<div className="mt-6">
+									<RoomTimeSlots timeSlots={timeSlots} roomId={roomId} />
+								</div>
+							)}
+						</>
+					) : (
+						/* EDIT MODE */
+						<Paper className="p-8">
+							<Typography
+								variant="h4"
+								className="mb-6 font-bold"
+							>
+								{isCreateMode ? 'Thêm phòng' : 'Chỉnh sửa phòng'}
+							</Typography>
+
+							<div className="space-y-6">
+								{/* Basic Information */}
+								<div>
+									<Typography
+										variant="h6"
+										className="mb-4 font-semibold"
+									>
+										Thông tin cơ bản
+									</Typography>
+									<RoomBasicInfoForm
+										control={control}
+										errors={errors}
+									/>
+								</div>
+
+								<Divider />
+
+								{/* Images */}
+								<div>
+									<Typography
+										variant="h6"
+										className="mb-4 font-semibold"
+									>
+										Hình ảnh
+									</Typography>
+									<RoomImagesForm control={control} />
+								</div>
+
+								<Divider />
+
+								{/* Amenities */}
+								<div>
+									<Typography
+										variant="h6"
+										className="mb-4 font-semibold"
+									>
+										Tiện nghi
+									</Typography>
+									<RoomAmenitiesForm
+										control={control}
+										amenities={amenities || []}
+									/>
+								</div>
+
+								<Divider />
+
+								{/* Time Slots */}
+								<RoomTimeSlotsForm
+									control={controlTimeSlots}
+									fields={timeSlotFields}
+									append={appendTimeSlot}
+									remove={removeTimeSlot}
+									getValues={getTimeSlotValues}
+									roomId={room?.id || roomId}
+									onSaveTimeSlot={handleSaveTimeSlot}
+									onDeleteTimeSlot={handleDeleteTimeSlot}
+									setValue={setTimeSlotValue}
+									isViewMode={false}
+								/>
+							</div>
+						</Paper>
+					)}
+				</Container>
+				<Backdrop
+					sx={{ 
+						position: 'absolute', 
+						color: '#fff', 
+						zIndex: 9999,
+						alignItems: 'flex-start'
+					}}
+					open={isSaving || isSyncing}
+				>
+					<div className="sticky top-1/2 flex w-full -translate-y-1/2 flex-col items-center justify-center font-medium">
+						<FuseLoading className="mb-2 !h-auto !min-h-0 !w-auto !p-0" />
+						<Typography
+							color="inherit"
+							variant="h6"
+						>
+							{isSyncing && syncStatus ? syncStatus : 'Đang xử lý...'}
+						</Typography>
+					</div>
+				</Backdrop>
+			</div>
 		</FormProvider>
 	);
 }
