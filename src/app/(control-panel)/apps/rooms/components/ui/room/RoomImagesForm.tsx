@@ -3,6 +3,7 @@
 import FuseSvgIcon from '@fuse/core/FuseSvgIcon';
 import { Box, IconButton, Paper, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { useSnackbar } from 'notistack';
 import { useRef } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 
@@ -18,6 +19,7 @@ type RoomImagesFormProps = {
 
 function RoomImagesForm(props: RoomImagesFormProps) {
 	const { control } = props;
+	const { enqueueSnackbar } = useSnackbar();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const { fields, append, remove } = useFieldArray({
@@ -30,8 +32,21 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 
 		if (!files || files.length === 0) return;
 
-		// Add files as local preview (not uploaded yet)
+		// Filter files > 10MB
+		const validFiles: File[] = [];
+		const MAX_SIZE_MB = 10;
+		const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 		Array.from(files).forEach((file) => {
+			if (file.size > MAX_SIZE_BYTES) {
+				enqueueSnackbar(`Ảnh "${file.name}" vượt quá giới hạn ${MAX_SIZE_MB}MB`, { variant: 'warning' });
+			} else {
+				validFiles.push(file);
+			}
+		});
+
+		// Add files as local preview (not uploaded yet)
+		validFiles.forEach((file) => {
 			const localUrl = URL.createObjectURL(file);
 			append({
 				file,
@@ -52,15 +67,30 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 
 		if (!files || files.length === 0) return;
 
+		// Filter files > 10MB
+		const validFiles: File[] = [];
+		const MAX_SIZE_MB = 10;
+		const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
 		Array.from(files).forEach((file) => {
-			if (file.type.startsWith('image/')) {
-				const localUrl = URL.createObjectURL(file);
-				append({
-					file,
-					url: localUrl,
-					isLocal: true
-				});
+			if (!file.type.startsWith('image/')) {
+				return;
 			}
+
+			if (file.size > MAX_SIZE_BYTES) {
+				enqueueSnackbar(`Ảnh "${file.name}" vượt quá giới hạn ${MAX_SIZE_MB}MB`, { variant: 'warning' });
+			} else {
+				validFiles.push(file);
+			}
+		});
+
+		validFiles.forEach((file) => {
+			const localUrl = URL.createObjectURL(file);
+			append({
+				file,
+				url: localUrl,
+				isLocal: true
+			});
 		});
 	};
 
