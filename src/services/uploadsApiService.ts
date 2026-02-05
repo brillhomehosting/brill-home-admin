@@ -23,7 +23,8 @@ export const uploadsApi = {
 		const result = await mainApi
 			.post('uploads', {
 				body: formData,
-				searchParams: { folder }
+				searchParams: { folder },
+				timeout: 60000
 			})
 			.json<ApiResponse<UploadResponse>>();
 

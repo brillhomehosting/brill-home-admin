@@ -19,7 +19,10 @@ export const mainApi: KyInstance = ky.create({
 		beforeRequest: [
 			(request, options) => {
 				Object.entries(globalHeaders).forEach(([key, value]) => {
-					if (key.toLowerCase() === 'content-type' && options.body instanceof FormData) {
+					// Check if body is FormData (handle both native, polyfilled, and cross-realm)
+					const isFormData =
+						options.body instanceof FormData || (options.body && (options.body as any).constructor?.name === 'FormData');
+					if (key.toLowerCase() === 'content-type' && isFormData) {
 						return;
 					}
 

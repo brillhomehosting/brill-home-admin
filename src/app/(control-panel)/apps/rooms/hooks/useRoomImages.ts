@@ -103,7 +103,6 @@ export function useRoomImages(roomId: string) {
 	 */
 	const syncImages = useCallback(
 		async (currentImages: FormImage[], originalImages: RoomImage[]): Promise<ImageSyncResult> => {
-			setIsSyncing(true);
 			const result: ImageSyncResult = {
 				uploaded: [],
 				added: [],
@@ -111,13 +110,31 @@ export function useRoomImages(roomId: string) {
 				hasErrors: false
 			};
 
+			// Step 1: Find new images to upload
+			const newImages = currentImages.filter((img) => img.isLocal && img.file);
+			const existingImageIds = new Set(
+				currentImages.filter((img) => !img.isLocal && img.id).map((img) => img.id)
+			);
+			const removedImages = originalImages.filter((img) => !existingImageIds.has(img.id));
+
+			// Early return if no changes
+			if (newImages.length === 0 && removedImages.length === 0) {
+				return result;
+			}
+
+			// Validate file size (max 10MB)
+			const MAX_SIZE_MB = 10;
+			const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+			const invalidImages = newImages.filter((img) => img.file && img.file.size > MAX_SIZE_BYTES);
+
+			if (invalidImages.length > 0) {
+				enqueueSnackbar(`Vui lòng chọn ảnh có kích thước dưới ${MAX_SIZE_MB}MB`, { variant: 'warning' });
+				return { ...result, hasErrors: true };
+			}
+
+			setIsSyncing(true);
+
 			try {
-				// Step 1: Find new images to upload
-				const newImages = currentImages.filter((img) => img.isLocal && img.file);
-				const existingImageIds = new Set(
-					currentImages.filter((img) => !img.isLocal && img.id).map((img) => img.id)
-				);
-				const removedImages = originalImages.filter((img) => !existingImageIds.has(img.id));
 
 				// Step 2: Upload new images in parallel with allSettled
 				if (newImages.length > 0) {
