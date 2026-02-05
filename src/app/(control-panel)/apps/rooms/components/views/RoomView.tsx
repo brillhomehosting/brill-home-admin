@@ -214,6 +214,17 @@ function RoomView(props: RoomViewProps) {
 
 				// Upload local images in parallel
 				if (localImages.length > 0) {
+					// Validate file size (max 10MB)
+					const MAX_SIZE_MB = 10;
+					const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+					const invalidImages = localImages.filter((img) => img.file && img.file.size > MAX_SIZE_BYTES);
+
+					if (invalidImages.length > 0) {
+						enqueueSnackbar(`Vui lòng chọn ảnh có kích thước dưới ${MAX_SIZE_MB}MB`, { variant: 'warning' });
+						setIsSaving(false);
+						return;
+					}
+
 					const { uploadsApi } = await import('@/services/uploadsApiService');
 					const uploadResults = await Promise.allSettled(
 						localImages.map((img) => uploadsApi.uploadFile(img.file!, 'ROOMS'))
@@ -293,7 +304,16 @@ function RoomView(props: RoomViewProps) {
 						const originalImages: RoomImage[] = room?.images || [];
 
 						// Use the hook for granular image sync with Promise.allSettled
-						await syncImages(currentImages, originalImages);
+						const syncResult = await syncImages(currentImages, originalImages);
+
+						// If image sync has errors, stop here - user needs to see the error and retry/fix
+						if (syncResult.hasErrors) {
+							setIsSaving(false);
+							// Warning snackbar is already shown by syncImages
+							// We can optionally show a more general message or just let the specific errors speak
+							// enqueueSnackbar('Cập nhật hình ảnh thất bại. Vui lòng thử lại.', { variant: 'warning' });
+							return;
+						}
 
 						// Check if amenities have changed
 						const currentAmenityIds = data.amenityIds || [];

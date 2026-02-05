@@ -61,9 +61,9 @@ function RandomNumberGeneratorView() {
 	const handleConfirmCreatePassword = async () => {
 		if (!selectedRoomForPassword) return;
 
-		// Generate random 4-digit password
-		const min = 1000;
-		const max = 9999;
+		// Generate random 6-digit password
+		const min = 100000;
+		const max = 999999;
 		const newPassword = Math.floor(Math.random() * (max - min + 1)) + min;
 
 		try {
