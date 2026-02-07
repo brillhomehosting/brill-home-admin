@@ -408,11 +408,22 @@ function RoomTimeSlotsForm(props: RoomTimeSlotsFormProps) {
 
 	// Date picker state
 	const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+	const [debouncedDate, setDebouncedDate] = useState<Date | null>(selectedDate);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedDate(selectedDate);
+		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
+	}, [selectedDate]);
 
 	// Fetch available time slots for selected date
 	const { data: availableTimeSlots = [], isLoading: isLoadingAvailability } = useTimeSlotAvailability(
 		roomId,
-		selectedDate
+		debouncedDate
 	);
 
 	// Watch all timeslots to check for unsaved items
@@ -503,6 +514,7 @@ function RoomTimeSlotsForm(props: RoomTimeSlotsFormProps) {
 									label="Kiểm tra tình trạng theo ngày"
 									value={selectedDate}
 									onChange={(newDate) => setSelectedDate(newDate)}
+									format="dd/MM/yyyy"
 									slotProps={{
 										textField: {
 											size: 'small',
