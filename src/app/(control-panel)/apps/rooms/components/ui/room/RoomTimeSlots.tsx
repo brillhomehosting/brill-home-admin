@@ -4,7 +4,7 @@ import FuseSvgIcon from '@fuse/core/FuseSvgIcon';
 import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useCreateBooking } from '../../../api/hooks/useCreateBooking';
 import { useTimeSlotAvailability } from '../../../api/hooks/useTimeSlotAvailability';
 
@@ -24,11 +24,22 @@ type RoomTimeSlotsProps = {
 function RoomTimeSlots(props: RoomTimeSlotsProps) {
 	const { timeSlots, roomId } = props;
 	const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+	const [debouncedDate, setDebouncedDate] = useState<Date | null>(selectedDate);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedDate(selectedDate);
+		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
+	}, [selectedDate]);
 
 	// Fetch available time slots for selected date
 	const { data: availableTimeSlots = [], isLoading: isLoadingAvailability } = useTimeSlotAvailability(
 		roomId || '',
-		selectedDate
+		debouncedDate
 	);
 
 	// Booking mutation
@@ -106,6 +117,7 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 									label="Kiểm tra tình trạng theo ngày"
 									value={selectedDate}
 									onChange={(newDate) => setSelectedDate(newDate)}
+									format="dd/MM/yyyy"
 									slotProps={{
 										textField: {
 											size: 'small',
