@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { timeslotsApi } from '../services/timeslotApiService';
+import { TimeSlotAvailabilityItem } from '../types';
 
 export const useTimeSlotAvailability = (roomId: string, selectedDate: Date | null) => {
 	// Format date to YYYY-MM-DD
@@ -9,7 +10,7 @@ export const useTimeSlotAvailability = (roomId: string, selectedDate: Date | nul
 
 	const dateString = selectedDate ? formatDate(selectedDate) : null;
 
-	return useQuery({
+	return useQuery<TimeSlotAvailabilityItem[]>({
 		queryKey: ['timeSlotAvailability', roomId, dateString],
 		queryFn: () => {
 			if (!dateString) {
