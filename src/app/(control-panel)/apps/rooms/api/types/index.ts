@@ -65,6 +65,7 @@ export type TimeSlot = {
 export type TimeSlotAvailabilityItem = {
 	timeSlot: TimeSlot;
 	isActive: boolean;
+	bookingId?: string;
 };
 
 export type TimeSlotAvailabilityDate = {

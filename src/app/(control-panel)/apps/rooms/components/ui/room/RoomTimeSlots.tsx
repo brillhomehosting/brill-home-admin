@@ -6,7 +6,9 @@ import Grid from '@mui/material/Grid';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useCallback, useEffect, useState } from 'react';
 import { useCreateBooking } from '../../../api/hooks/useCreateBooking';
+import { useDeleteBooking } from '../../../api/hooks/useDeleteBooking';
 import { useTimeSlotAvailability } from '../../../api/hooks/useTimeSlotAvailability';
+import { TimeSlotAvailabilityItem } from '../../../api/types';
 
 type TimeSlot = {
 	id?: string;
@@ -36,31 +38,50 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 		};
 	}, [selectedDate]);
 
-	// Fetch available time slots for selected date
-	const { data: availableTimeSlots = [], isLoading: isLoadingAvailability } = useTimeSlotAvailability(
+	// Fetch availability items for selected date
+	const { data: availabilityItems = [], isLoading: isLoadingAvailability } = useTimeSlotAvailability(
 		roomId || '',
 		debouncedDate
 	);
 
-	// Booking mutation
+	// Booking mutations
 	const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
+	const { mutate: deleteBooking, isPending: isDeleting } = useDeleteBooking();
 
 	// Dialog state
 	const [bookingDialog, setBookingDialog] = useState<{ open: boolean; slot: TimeSlot | null }>({ open: false, slot: null });
+	const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; slot: TimeSlot | null; bookingId: string | null }>({ open: false, slot: null, bookingId: null });
 
-	// Helper function to check if a timeslot is available
-	const isTimeSlotAvailable = useCallback((timeslot: TimeSlot): boolean => {
-		if (!selectedDate || availableTimeSlots.length === 0) {
-			return true; // Default to available if no date selected or no data
+	// Find matching availability item for a time slot
+	const getSlotAvailability = useCallback((timeslot: TimeSlot): TimeSlotAvailabilityItem | undefined => {
+		if (!selectedDate || availabilityItems.length === 0) {
+			return undefined;
 		}
 
-		// Check if this timeslot exists in the available slots
-		return availableTimeSlots.some(
-			(availableSlot) =>
-				availableSlot.startTime === timeslot.startTime &&
-				availableSlot.endTime === timeslot.endTime
+		return availabilityItems.find(
+			(item) =>
+				item.timeSlot.startTime === timeslot.startTime &&
+				item.timeSlot.endTime === timeslot.endTime
 		);
-	}, [selectedDate, availableTimeSlots]);
+	}, [selectedDate, availabilityItems]);
+
+	// Check if a time slot has already passed
+	const isTimeSlotPassed = useCallback((slot: TimeSlot): boolean => {
+		if (!selectedDate || !slot.endTime) return false;
+
+		const now = new Date();
+		const [hours, minutes] = slot.endTime.split(':').map(Number);
+
+		const slotEnd = new Date(selectedDate);
+		slotEnd.setHours(hours, minutes, 0, 0);
+
+		// For overnight slots, endTime is on the next day
+		if (slot.isOvernight) {
+			slotEnd.setDate(slotEnd.getDate() + 1);
+		}
+
+		return slotEnd < now;
+	}, [selectedDate]);
 
 	// Handle booking
 	const handleBookSlot = (slot: TimeSlot) => {
@@ -70,7 +91,6 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 	const handleConfirmBooking = () => {
 		if (!bookingDialog.slot || !roomId || !selectedDate) return;
 
-		// Format date as YYYY-MM-DD in local timezone
 		const year = selectedDate.getFullYear();
 		const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
 		const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -88,6 +108,21 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 				}
 			}
 		);
+	};
+
+	// Handle delete booking
+	const handleDeleteBooking = (slot: TimeSlot, bookingId: string) => {
+		setDeleteDialog({ open: true, slot, bookingId });
+	};
+
+	const handleConfirmDelete = () => {
+		if (!deleteDialog.bookingId) return;
+
+		deleteBooking(deleteDialog.bookingId, {
+			onSuccess: () => {
+				setDeleteDialog({ open: false, slot: null, bookingId: null });
+			}
+		});
 	};
 
 	if (!timeSlots || timeSlots.length === 0) {
@@ -144,7 +179,11 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 				spacing={3}
 			>
 				{timeSlots.map((slot, idx) => {
-					const isAvailable = roomId ? isTimeSlotAvailable(slot) : true;
+					const availabilityItem = roomId ? getSlotAvailability(slot) : undefined;
+					const isAvailable = roomId ? (availabilityItem ? availabilityItem.isActive : true) : true;
+					const bookingId = availabilityItem?.bookingId;
+					const isPassed = isTimeSlotPassed(slot);
+					const canDelete = !isAvailable && !!bookingId && !isPassed;
 
 					return (
 						<Grid
@@ -182,7 +221,7 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 									>
 										Khung giờ {idx + 1}
 									</Typography>
-									
+
 									{/* Status Chips Row */}
 									<Box className="flex gap-1 items-center">
 										{slot.isOvernight && (
@@ -266,8 +305,53 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 										</Box>
 									)}
 
-									{/* Message for unavailable slots */}
-									{roomId && !isAvailable && (
+									{/* Delete Button for booked slots that haven't passed */}
+									{roomId && canDelete && (
+										<Box className="pt-2">
+											<Button
+												variant="outlined"
+												color="error"
+												size="medium"
+												fullWidth
+												onClick={() => handleDeleteBooking(slot, bookingId!)}
+												startIcon={<FuseSvgIcon size={16}>lucide:trash-2</FuseSvgIcon>}
+												sx={{
+													py: 1,
+													fontWeight: 600,
+													textTransform: 'none'
+												}}
+											>
+												Xóa đặt phòng
+											</Button>
+										</Box>
+									)}
+
+									{/* Message for booked slots that have passed */}
+									{roomId && !isAvailable && isPassed && (
+										<Box className="pt-2">
+											<Paper
+												sx={{
+													p: 1.5,
+													bgcolor: 'grey.100',
+													border: '1px solid',
+													borderColor: 'grey.300'
+												}}
+												elevation={0}
+											>
+												<Typography
+													variant="caption"
+													color="text.disabled"
+													className="flex items-center gap-1"
+												>
+													<FuseSvgIcon size={14}>lucide:clock</FuseSvgIcon>
+													Khung giờ đã qua
+												</Typography>
+											</Paper>
+										</Box>
+									)}
+
+									{/* Message for booked slots without bookingId (no delete possible) */}
+									{roomId && !isAvailable && !bookingId && !isPassed && (
 										<Box className="pt-2">
 											<Paper
 												sx={{
@@ -312,7 +396,7 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 					</DialogContentText>
 				</DialogContent>
 				<DialogActions>
-					<Button 
+					<Button
 						onClick={() => setBookingDialog({ open: false, slot: null })}
 						disabled={isBooking}
 					>
@@ -332,6 +416,46 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 						}
 					>
 						{isBooking ? 'Đang đặt...' : 'Xác nhận'}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Delete Booking Confirmation Dialog */}
+			<Dialog
+				open={deleteDialog.open}
+				onClose={() => !isDeleting && setDeleteDialog({ open: false, slot: null, bookingId: null })}
+			>
+				<DialogTitle sx={{ color: 'error.main' }}>Xác nhận xóa đặt phòng</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Bạn có chắc muốn xóa đặt phòng này không? Hành động này <strong>không thể hoàn tác</strong>.
+						<br />
+						<strong>Thời gian:</strong> {deleteDialog.slot?.startTime} - {deleteDialog.slot?.endTime}
+						<br />
+						<strong>Ngày:</strong> {selectedDate?.toLocaleDateString('vi-VN')}
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => setDeleteDialog({ open: false, slot: null, bookingId: null })}
+						disabled={isDeleting}
+					>
+						Hủy
+					</Button>
+					<Button
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+						disabled={isDeleting}
+						startIcon={
+							isDeleting ? (
+								<FuseSvgIcon size={16}>lucide:loader-2</FuseSvgIcon>
+							) : (
+								<FuseSvgIcon size={16}>lucide:trash-2</FuseSvgIcon>
+							)
+						}
+					>
+						{isDeleting ? 'Đang xóa...' : 'Xóa đặt phòng'}
 					</Button>
 				</DialogActions>
 			</Dialog>

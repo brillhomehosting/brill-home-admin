@@ -38,7 +38,7 @@ export const timeslotsApi = {
 		await mainApi.delete(`rooms/${roomId}/time-slots/${timeslotId}`);
 	},
 
-	getTimeSlotAvailability: async (roomId: string, startDate: string, endDate: string): Promise<TimeSlot[]> => {
+	getTimeSlotAvailability: async (roomId: string, startDate: string, endDate: string): Promise<TimeSlotAvailabilityItem[]> => {
 		const result = await mainApi
 			.get(`rooms/${roomId}/time-slots/availability`, {
 				searchParams: {
@@ -47,21 +47,16 @@ export const timeslotsApi = {
 				}
 			})
 			.json<ApiResponse<TimeSlotAvailabilityDate[]>>();
-		
-		// Extract time slots from the nested structure
-		// The API returns an array of dates, each with timeSlots
-		// We need to flatten this and extract only the active ones
-		const availableSlots: TimeSlot[] = [];
-		
+
+		// Extract all time slot items from the nested structure
+		const allItems: TimeSlotAvailabilityItem[] = [];
+
 		result.data.forEach((dateItem: TimeSlotAvailabilityDate) => {
 			dateItem.timeSlots.forEach((item: TimeSlotAvailabilityItem) => {
-				// Only include slots where isActive is true
-				if (item.isActive) {
-					availableSlots.push(item.timeSlot);
-				}
+				allItems.push(item);
 			});
 		});
-		
-		return availableSlots;
+
+		return allItems;
 	}
 };

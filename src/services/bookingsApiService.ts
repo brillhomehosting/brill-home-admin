@@ -22,5 +22,9 @@ export const bookingsApi = {
 			.post('bookings', { json: data })
 			.json<ApiResponse<Booking>>();
 		return result.data;
+	},
+
+	deleteBooking: async (bookingId: string): Promise<void> => {
+		await mainApi.delete(`bookings/${bookingId}`);
 	}
 };
