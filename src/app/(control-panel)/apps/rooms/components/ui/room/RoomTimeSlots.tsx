@@ -105,6 +105,9 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 			{
 				onSuccess: () => {
 					setBookingDialog({ open: false, slot: null });
+				},
+				onError: () => {
+					setBookingDialog({ open: false, slot: null });
 				}
 			}
 		);
