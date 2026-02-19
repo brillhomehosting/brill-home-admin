@@ -31,13 +31,23 @@ export const MOCK_USER: User = {
 	loginRedirectUrl: '/'
 };
 
+type RefreshTokenResponse = {
+	accessToken: string;
+	refreshToken: string;
+	expiresIn: number;
+};
+
 /**
- * Refreshes the access token
+ * Refreshes the access token using the stored refresh token
  */
-export async function authRefreshToken(): Promise<Response> {
-	return api.post('accounts/refresh-token', {
-		retry: 0 // Don't retry refresh token requests
-	});
+export async function authRefreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+	const res = await mainApi
+		.post('accounts/refresh-token', {
+			json: { refreshToken },
+			retry: 0
+		})
+		.json<{ success: boolean; message: string; data: { tokens: RefreshTokenResponse } }>();
+	return res.data.tokens;
 }
 
 /**
