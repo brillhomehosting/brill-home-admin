@@ -10,10 +10,11 @@ export const useCreateBooking = () => {
 	return useMutation({
 		mutationFn: (data: CreateBookingData) => bookingsApi.createBooking(data),
 		onSuccess: () => {
-			// Invalidate availability queries to refetch and show updated status
 			queryClient.invalidateQueries({ queryKey: ['timeSlotAvailability'] });
+			enqueueSnackbar('Đặt khung giờ thành công', { variant: 'success' });
 		},
 		onError: async (error: unknown) => {
+			queryClient.invalidateQueries({ queryKey: ['timeSlotAvailability'] });
 			const errorMessage = await getErrorMessage(error);
 			enqueueSnackbar(errorMessage, { variant: 'error' });
 		}
