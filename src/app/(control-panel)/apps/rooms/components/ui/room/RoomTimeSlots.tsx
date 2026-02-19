@@ -58,11 +58,13 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 			return undefined;
 		}
 
-		return availabilityItems.find(
-			(item) =>
-				item.timeSlot.startTime === timeslot.startTime &&
-				item.timeSlot.endTime === timeslot.endTime
-		);
+		return availabilityItems.find((item) => {
+			if (timeslot.id && item.timeSlot.id) {
+				return item.timeSlot.id === timeslot.id;
+			}
+			return item.timeSlot.startTime === timeslot.startTime &&
+				item.timeSlot.endTime === timeslot.endTime;
+		});
 	}, [selectedDate, availabilityItems]);
 
 	// Check if a time slot has already passed
@@ -89,7 +91,7 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 	};
 
 	const handleConfirmBooking = () => {
-		if (!bookingDialog.slot || !roomId || !selectedDate) return;
+		if (!bookingDialog.slot || !bookingDialog.slot.id || !roomId || !selectedDate) return;
 
 		const year = selectedDate.getFullYear();
 		const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -123,6 +125,9 @@ function RoomTimeSlots(props: RoomTimeSlotsProps) {
 
 		deleteBooking(deleteDialog.bookingId, {
 			onSuccess: () => {
+				setDeleteDialog({ open: false, slot: null, bookingId: null });
+			},
+			onError: () => {
 				setDeleteDialog({ open: false, slot: null, bookingId: null });
 			}
 		});
