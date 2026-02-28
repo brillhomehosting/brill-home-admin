@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { MenuItem, Select, ListItemIcon, ListItemText, Typography, useTheme } from '@mui/material';
 
 type ProjectOption = {
@@ -27,7 +27,7 @@ const projectOptions: ProjectOption[] = [
 ];
 
 function MainProjectSelection() {
-	const [selectedProjectValue, setSelectedProject] = React.useState<string>(projectOptions[0].value);
+	const [selectedProjectValue, setSelectedProject] = useState<string>(projectOptions[0].value);
 	const selectedProject = projectOptions.find((project) => project.value === selectedProjectValue);
 	const theme = useTheme();
 	const handleMenuItemClick = (projectValue: string) => {

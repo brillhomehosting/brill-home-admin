@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { iconsApiService } from '../services/iconsApiService';
+import { api } from '@/utils/api';
 
-export const getIconsQueryKey = (url: string) => ['icons', url];
-
-export const useIcons = (url: string) => {
-	return useQuery({
-		queryFn: () => iconsApiService.getIcons(url),
-		queryKey: getIconsQueryKey(url)
+/**
+ * Hook to fetch available icon names from the API.
+ */
+export function useIcons(apiUrl: string) {
+	return useQuery<string[]>({
+		queryKey: ['icons', apiUrl],
+		queryFn: async () => {
+			const response = await api.get(apiUrl);
+			return response.json<string[]>();
+		},
+		staleTime: Infinity
 	});
-};
+}

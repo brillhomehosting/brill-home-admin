@@ -4,7 +4,6 @@ import clsx from 'clsx';
 import { memo } from 'react';
 import NavbarToggleButton from 'src/components/theme-layouts/components/navbar/NavbarToggleButton';
 import useFuseLayoutSettings from '@fuse/core/FuseLayout/useFuseLayoutSettings';
-import NotificationPanelToggleButton from '@/app/(control-panel)/apps/notifications/components/ui/notification-panel/NotificationPanelToggleButton';
 import AdjustFontSize from '../../components/AdjustFontSize';
 import FullScreenToggle from '../../components/FullScreenToggle';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
@@ -50,7 +49,6 @@ function ToolbarLayout2(props: ToolbarLayout2Props) {
 						<FullScreenToggle />
 						<NavigationSearch />
 						<QuickPanelToggleButton />
-						<NotificationPanelToggleButton />
 					</div>
 					{!isMobile && (
 						<UserMenu
