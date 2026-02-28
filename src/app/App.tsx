@@ -1,4 +1,3 @@
-import { NotificationPanelContextProvider } from '@/app/(control-panel)/apps/notifications/contexts/NotificationPanelContext/NotificationPanelContextProvider';
 import { NavbarContextProvider } from '@/components/theme-layouts/components/navbar/contexts/NavbarContext/NavbarContextProvider';
 import { NavigationContextProvider } from '@/components/theme-layouts/components/navigation/contexts/NavigationContextProvider';
 import { QuickPanelProvider } from '@/components/theme-layouts/components/quickPanel/contexts/QuickPanelContext/QuickPanelContextProvider';
@@ -69,11 +68,9 @@ function App() {
 																		'bottom-0 right-0 mb-13 md:mb-17 mr-2 lg:mr-20'
 																}}
 															>
-																<NotificationPanelContextProvider>
-																	<QuickPanelProvider>
-																		<FuseLayout layouts={themeLayouts} />
-																	</QuickPanelProvider>
-																</NotificationPanelContextProvider>
+																<QuickPanelProvider>
+																	<FuseLayout layouts={themeLayouts} />
+																</QuickPanelProvider>
 															</SnackbarProvider>
 														</FuseDialogContextProvider>
 													</NavigationContextProvider>

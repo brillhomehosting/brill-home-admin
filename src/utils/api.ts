@@ -64,8 +64,4 @@ export const removeGlobalHeaders = (headerKeys: string[]) => {
 	});
 };
 
-export const getGlobalHeaders = () => {
-	return globalHeaders;
-};
-
 export default api;

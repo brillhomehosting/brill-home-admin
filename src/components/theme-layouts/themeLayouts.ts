@@ -1,4 +1,4 @@
-import React, { ComponentType } from 'react';
+import { ComponentType, ReactNode } from 'react';
 import Layout1 from './layout1/Layout1';
 import Layout2 from './layout2/Layout2';
 import Layout3 from './layout3/Layout3';
@@ -6,7 +6,7 @@ import Layout3 from './layout3/Layout3';
 /**
  * The type definition for the theme layouts.
  */
-export type themeLayoutsType = Record<string, ComponentType<{ children?: React.ReactNode }>>;
+export type themeLayoutsType = Record<string, ComponentType<{ children?: ReactNode }>>;
 
 /**
  * The theme layouts.
