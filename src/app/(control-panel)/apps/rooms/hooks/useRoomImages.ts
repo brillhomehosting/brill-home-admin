@@ -10,7 +10,7 @@ import { roomsApi } from '../api/services/roomsApiService';
 import { Room, RoomImage } from '../api/types';
 
 export type FormImage = {
-	id?: string;
+	imageId?: string;
 	url: string;
 	isLocal?: boolean;
 	file?: File;
@@ -125,7 +125,7 @@ export function useRoomImages(roomId: string) {
 			// Step 1: Find new images to upload
 			const newImages = currentImages.filter((img) => img.isLocal && img.file);
 			const existingImageIds = new Set(
-				currentImages.filter((img) => !img.isLocal && img.id).map((img) => img.id)
+				currentImages.filter((img) => !img.isLocal && img.imageId).map((img) => img.imageId)
 			);
 			const removedImages = originalImages.filter((img) => !existingImageIds.has(img.id));
 

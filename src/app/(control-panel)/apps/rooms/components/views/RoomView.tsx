@@ -149,6 +149,11 @@ function RoomView(props: RoomViewProps) {
 		if (room) {
 			const normalized = {
 				...room,
+				images: (room.images || []).map((image) => ({
+					imageId: image.id,
+					url: image.url,
+					isLocal: false
+				})),
 				amenityIds: room.amenities
 					? room.amenities.map((a: any) => (typeof a === 'string' ? a : a.id || a._id || a))
 					: []
@@ -372,12 +377,12 @@ function RoomView(props: RoomViewProps) {
 	};
 
 	const handleDeletePersistedImage = async (image: FormImage): Promise<boolean> => {
-		if (!image.id) {
+		if (!image.imageId) {
 			return true;
 		}
 
 		const result = await deleteSingleImage({
-			id: image.id,
+			id: image.imageId,
 			url: image.url
 		});
 
@@ -389,7 +394,9 @@ function RoomView(props: RoomViewProps) {
 			return false;
 		}
 
-		setOriginalRoomImages((currentImages) => currentImages.filter((currentImage) => currentImage.id !== image.id));
+		setOriginalRoomImages((currentImages) =>
+			currentImages.filter((currentImage) => currentImage.id !== image.imageId)
+		);
 		return true;
 	};
 
