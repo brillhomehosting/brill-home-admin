@@ -18,10 +18,11 @@ import { useRef, useState } from 'react';
 import { Control, FieldValues, useFieldArray } from 'react-hook-form';
 
 export type RoomImageField = {
-	id?: string;
+	imageId?: string;
 	file?: File;
 	url: string;
 	isLocal: boolean; // true = local preview, false = already uploaded
+	fieldId?: string;
 };
 
 type RoomImagesFormProps = {
@@ -39,7 +40,8 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 
 	const { fields, append, remove } = useFieldArray({
 		control,
-		name: 'images'
+		name: 'images',
+		keyName: 'fieldId'
 	});
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,7 +218,7 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 				>
 					{fields.map((field, index: number) => (
 						<Grid
-							key={field.id}
+							key={field.fieldId}
 							size={{ xs: 6, sm: 4, md: 3 }}
 						>
 							<Paper
