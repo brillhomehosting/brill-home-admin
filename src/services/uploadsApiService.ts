@@ -3,10 +3,34 @@ import { mainApi } from '@/utils/api';
 
 export type UploadFolder = 'ROOMS' | 'BLOGS';
 
-export type UploadResponse = {
-	url: string;
+type RawUploadResponse = {
+	url?: string;
+	secure_url?: string;
+	public_id?: string;
 	publicId?: string;
 	filename?: string;
+};
+
+export type UploadResponse = {
+	url: string;
+	secureUrl?: string;
+	publicId?: string;
+	filename?: string;
+};
+
+const normalizeUploadResponse = (data: RawUploadResponse): UploadResponse => {
+	const url = data.url || data.secure_url;
+
+	if (!url) {
+		throw new Error('Upload response missing image URL');
+	}
+
+	return {
+		url,
+		secureUrl: data.secure_url,
+		publicId: data.public_id || data.publicId,
+		filename: data.filename
+	};
 };
 
 export const uploadsApi = {
@@ -26,9 +50,9 @@ export const uploadsApi = {
 				searchParams: { folder },
 				timeout: 60000
 			})
-			.json<ApiResponse<UploadResponse>>();
+			.json<ApiResponse<RawUploadResponse>>();
 
-		return result.data;
+		return normalizeUploadResponse(result.data);
 	},
 
 	/**
