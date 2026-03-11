@@ -87,6 +87,7 @@ function RoomView(props: RoomViewProps) {
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [amenitySearch, setAmenitySearch] = useState('');
 	const [originalAmenityIds, setOriginalAmenityIds] = useState<string[]>([]);
+	const [originalRoomImages, setOriginalRoomImages] = useState<RoomImage[]>([]);
 
 	const { data: timeSlots } = useTimeSlots(roomId);
 	const { data: amenities } = useAmenities(amenitySearch);
@@ -98,7 +99,7 @@ function RoomView(props: RoomViewProps) {
 	const { mutate: updateRoomAmenities } = useUpdateRoomAmenities();
 
 	// Image management hook
-	const { syncImages, rollbackUploadedImages, isSyncing, syncStatus } = useRoomImages(roomId);
+	const { deleteSingleImage, syncImages, rollbackUploadedImages, isSyncing, syncStatus } = useRoomImages(roomId);
 
 	const navigate = useNavigate();
 
@@ -155,6 +156,7 @@ function RoomView(props: RoomViewProps) {
 
 			// Save original amenity IDs for comparison
 			setOriginalAmenityIds(normalized.amenityIds);
+			setOriginalRoomImages(room.images || []);
 
 			const normalizeTime = (timeString?: string): string | undefined => {
 				if (!timeString) return undefined;
@@ -301,7 +303,7 @@ function RoomView(props: RoomViewProps) {
 						onSuccess: async () => {
 						// After room update success, sync image changes
 						const currentImages: FormImage[] = data.images || [];
-						const originalImages: RoomImage[] = room?.images || [];
+						const originalImages: RoomImage[] = originalRoomImages;
 
 						// Use the hook for granular image sync with Promise.allSettled
 						const syncResult = await syncImages(currentImages, originalImages);
@@ -367,6 +369,28 @@ function RoomView(props: RoomViewProps) {
 				setIsSaving(false);
 			}
 		}
+	};
+
+	const handleDeletePersistedImage = async (image: FormImage): Promise<boolean> => {
+		if (!image.id) {
+			return true;
+		}
+
+		const result = await deleteSingleImage({
+			id: image.id,
+			url: image.url
+		});
+
+		if (!result.success) {
+			if (result.error) {
+				enqueueSnackbar(result.error, { variant: 'error' });
+			}
+
+			return false;
+		}
+
+		setOriginalRoomImages((currentImages) => currentImages.filter((currentImage) => currentImage.id !== image.id));
+		return true;
 	};
 
 	const handleSaveTimeSlot = (index: number, timeslotData: any) => {
@@ -599,7 +623,11 @@ function RoomView(props: RoomViewProps) {
 									>
 										Hình ảnh
 									</Typography>
-									<RoomImagesForm control={control} />
+									<RoomImagesForm
+										control={control}
+										isImmediateDeleteEnabled={!isCreateMode}
+										onDeletePersistedImage={handleDeletePersistedImage}
+									/>
 								</div>
 
 								<Divider />

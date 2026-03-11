@@ -7,7 +7,7 @@ import { useSnackbar } from 'notistack';
 import { useCallback, useState } from 'react';
 import { roomKeys } from '../api/hooks/queryKeys';
 import { roomsApi } from '../api/services/roomsApiService';
-import { RoomImage } from '../api/types';
+import { Room, RoomImage } from '../api/types';
 
 export type FormImage = {
 	id?: string;
@@ -80,12 +80,24 @@ export function useRoomImages(roomId: string) {
 		try {
 			// Delete from room first
 			await roomsApi.deleteRoomImage(roomId, image.id);
-			// Then delete from storage (don't fail if this fails)
-			try {
-				await uploadsApi.deleteImageByUrl(image.url);
-			} catch {
-				// Storage deletion is non-critical
-			}
+
+			// Best-effort storage cleanup. The room image deletion has already succeeded.
+			uploadsApi.deleteImageByUrl(image.url).catch(() => {
+				// Storage deletion is non-critical and should not surface to the user.
+			});
+
+			queryClient.setQueryData(roomKeys.detail(roomId), (currentRoom: Room | undefined) => {
+				if (!currentRoom?.images) {
+					return currentRoom;
+				}
+
+				return {
+					...currentRoom,
+					images: currentRoom.images.filter((currentImage: RoomImage) => currentImage.id !== image.id)
+				};
+			});
+
+			queryClient.invalidateQueries({ queryKey: roomKeys.detail(roomId) });
 			return { success: true, url: image.url };
 		} catch (error) {
 			const errorMessage = await getErrorMessage(error);
@@ -252,6 +264,7 @@ export function useRoomImages(roomId: string) {
 	}, []);
 
 	return {
+		deleteSingleImage,
 		syncImages,
 		rollbackUploadedImages,
 		isSyncing,
