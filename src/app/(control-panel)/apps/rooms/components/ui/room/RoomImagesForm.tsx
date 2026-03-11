@@ -1,26 +1,41 @@
 'use client';
 
 import FuseSvgIcon from '@fuse/core/FuseSvgIcon';
-import { Box, IconButton, Paper, Typography } from '@mui/material';
+import {
+	Box,
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
+	IconButton,
+	Paper,
+	Typography
+} from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { useSnackbar } from 'notistack';
-import { useRef } from 'react';
-import { Control, useFieldArray } from 'react-hook-form';
+import { useRef, useState } from 'react';
+import { Control, FieldValues, useFieldArray } from 'react-hook-form';
 
-export type LocalImage = {
+export type RoomImageField = {
+	id?: string;
 	file?: File;
 	url: string;
 	isLocal: boolean; // true = local preview, false = already uploaded
 };
 
 type RoomImagesFormProps = {
-	control: Control<any>;
+	control: Control<FieldValues>;
+	isImmediateDeleteEnabled?: boolean;
+	onDeletePersistedImage?: (image: RoomImageField) => Promise<boolean>;
 };
 
 function RoomImagesForm(props: RoomImagesFormProps) {
-	const { control } = props;
+	const { control, isImmediateDeleteEnabled = false, onDeletePersistedImage } = props;
 	const { enqueueSnackbar } = useSnackbar();
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -98,15 +113,53 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 		e.preventDefault();
 	};
 
-	const handleRemove = (index: number) => {
-		const field = fields[index] as any;
+	const removeImageAtIndex = (index: number) => {
+		const field = fields[index] as RoomImageField | undefined;
 
-		// Revoke object URL if it's a local file
 		if (field?.isLocal && field?.url) {
 			URL.revokeObjectURL(field.url);
 		}
 
 		remove(index);
+	};
+
+	const handleDeleteClick = (index: number) => {
+		setPendingDeleteIndex(index);
+	};
+
+	const handleCloseDeleteDialog = () => {
+		if (isDeleting) {
+			return;
+		}
+
+		setPendingDeleteIndex(null);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (pendingDeleteIndex === null) {
+			return;
+		}
+
+		const field = fields[pendingDeleteIndex] as RoomImageField | undefined;
+
+		if (!field) {
+			setPendingDeleteIndex(null);
+			return;
+		}
+
+		if (!field.isLocal && isImmediateDeleteEnabled && onDeletePersistedImage) {
+			setIsDeleting(true);
+			const isDeleted = await onDeletePersistedImage(field);
+			setIsDeleting(false);
+
+			if (!isDeleted) {
+				setPendingDeleteIndex(null);
+				return;
+			}
+		}
+
+		removeImageAtIndex(pendingDeleteIndex);
+		setPendingDeleteIndex(null);
 	};
 
 	return (
@@ -161,7 +214,7 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 					container
 					spacing={2}
 				>
-					{fields.map((field: any, index: number) => (
+					{fields.map((field, index: number) => (
 						<Grid
 							key={field.id}
 							size={{ xs: 6, sm: 4, md: 3 }}
@@ -186,7 +239,7 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 									<IconButton
 										size="small"
 										className="bg-red-500 text-white hover:bg-red-600"
-										onClick={() => handleRemove(index)}
+										onClick={() => handleDeleteClick(index)}
 									>
 										<FuseSvgIcon size={20}>lucide:trash-2</FuseSvgIcon>
 									</IconButton>
@@ -211,6 +264,35 @@ function RoomImagesForm(props: RoomImagesFormProps) {
 					Chưa có hình ảnh nào
 				</Typography>
 			)}
+
+			<Dialog
+				open={pendingDeleteIndex !== null}
+				onClose={handleCloseDeleteDialog}
+				fullWidth
+				maxWidth="xs"
+			>
+				<DialogTitle>Xóa hình ảnh</DialogTitle>
+				<DialogContent>
+					<Typography color="text.secondary">Bạn có chắc muốn xóa hình ảnh này không?</Typography>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={handleCloseDeleteDialog}
+						color="inherit"
+						disabled={isDeleting}
+					>
+						Hủy
+					</Button>
+					<Button
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+						disabled={isDeleting}
+					>
+						{isDeleting ? 'Đang xóa...' : 'Xóa'}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</div>
 	);
 }
