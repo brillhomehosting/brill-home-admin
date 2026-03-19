@@ -40,10 +40,6 @@ function JwtSignInForm() {
 
 	const { isValid, dirtyFields, errors } = formState;
 
-	useEffect(() => {
-		setValue('username', 'admin', { shouldDirty: true, shouldValidate: true });
-		setValue('password', '12345678x@X', { shouldDirty: true, shouldValidate: true });
-	}, [setValue]);
 
 	function onSubmit(formData: FormType) {
 		const { username, password } = formData;
